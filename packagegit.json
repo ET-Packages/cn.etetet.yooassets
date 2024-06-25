@@ -1,0 +1,7 @@
+{
+"Id": 7,
+"Name": "YooAssets",
+"GitDependencies": {
+  "cn.etetet.core": "https://github.com/ET-Packages/cn.etetet.core.git#0.0.1"
+}
+}
