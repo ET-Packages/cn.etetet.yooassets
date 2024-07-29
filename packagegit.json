@@ -3,10 +3,10 @@
 "Name": "YooAssets",
 "ScriptsReferences": {
     "ModelView": [
-      "ET.YooAsset"
+      "ET.YooAssets"
     ],
     "HotfixView": [
-      "ET.YooAsset"
+      "ET.YooAssets"
     ]
 }
 }
