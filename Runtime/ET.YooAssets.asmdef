@@ -2,9 +2,7 @@
     "name": "ET.YooAssets",
     "rootNamespace": "",
     "references": [
-        "YooAsset",
-        "ET.Core",
-        "YooAsset.Editor"
+        "GUID:9ef2053bcf13a254ab3940a767f7b1a5"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
