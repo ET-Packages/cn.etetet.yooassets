@@ -13,7 +13,7 @@ namespace YooAsset
         public static string SimulateBuild(string buildPipelineName, string packageName)
         {
             if (_classType == null)
-                _classType = Assembly.Load("ET.YooAsset.Editor").GetType("YooAsset.Editor.AssetBundleSimulateBuilder");
+                _classType = Assembly.Load("ET.YooAssets.Editor").GetType("YooAsset.Editor.AssetBundleSimulateBuilder");
 
             string manifestFilePath = (string)InvokePublicStaticMethod(_classType, "SimulateBuild", buildPipelineName, packageName);
             return manifestFilePath;
