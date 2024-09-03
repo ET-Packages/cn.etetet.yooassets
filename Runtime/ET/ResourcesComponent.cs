@@ -69,10 +69,20 @@ namespace ET
                 }
                 case EPlayMode.HostPlayMode:
                 {
-                    string defaultHostServer = GetHostServerURL();
-                    string fallbackHostServer = GetHostServerURL();
+                    string defaultHostServer = GetHostServerURL(yooConfig.Url, package.PackageName);
+                    string fallbackHostServer = GetHostServerURL(yooConfig.Url, package.PackageName);
                     HostPlayModeParameters createParameters = new();
                     createParameters.BuildinQueryServices = new GameQueryServices();
+                    createParameters.RemoteServices = new RemoteServices(defaultHostServer, fallbackHostServer);
+                    await package.InitializeAsync(createParameters).Task;
+                    break;
+                }
+                case EPlayMode.WebPlayMode:
+                {
+                    string defaultHostServer = GetHostServerURL(yooConfig.Url, package.PackageName);
+                    string fallbackHostServer = GetHostServerURL(yooConfig.Url, package.PackageName);
+                    WebPlayModeParameters createParameters = new();
+                    createParameters.BuildinQueryServices = new WebGLGameQueryServices();
                     createParameters.RemoteServices = new RemoteServices(defaultHostServer, fallbackHostServer);
                     await package.InitializeAsync(createParameters).Task;
                     break;
@@ -82,42 +92,41 @@ namespace ET
             }
         }
 
-        static string GetHostServerURL()
+        string GetHostServerURL(string url, string pacakgeName)
         {
             //string hostServerIP = "http://10.0.2.2"; //安卓模拟器地址
-            string hostServerIP = "http://127.0.0.1";
+            string hostServerIP = url;
             string appVersion = "v1.0";
-
+                
+                
 #if UNITY_EDITOR
-            if (UnityEditor.EditorUserBuildSettings.activeBuildTarget == UnityEditor.BuildTarget.Android)
+            switch (UnityEditor.EditorUserBuildSettings.activeBuildTarget)
             {
-                return $"{hostServerIP}/CDN/Android/{appVersion}";
+                case UnityEditor.BuildTarget.Android:
+                    return $"{hostServerIP}/CDN/Android/{appVersion}";
+                case UnityEditor.BuildTarget.iOS:
+                    return $"{hostServerIP}/CDN/IPhone/{appVersion}";
+                case UnityEditor.BuildTarget.WebGL:
+                {
+                    return $"{hostServerIP}/StreamingAssets/Bundles/{pacakgeName}";
+                }
+                default:
+                    return $"{hostServerIP}/CDN/PC/{appVersion}";
             }
-            else if (UnityEditor.EditorUserBuildSettings.activeBuildTarget == UnityEditor.BuildTarget.iOS)
-            {
-                return $"{hostServerIP}/CDN/IPhone/{appVersion}";
-            }
-            else if (UnityEditor.EditorUserBuildSettings.activeBuildTarget == UnityEditor.BuildTarget.WebGL)
-            {
-                return $"{hostServerIP}/CDN/WebGL/{appVersion}";
-            }
-
-            return $"{hostServerIP}/CDN/PC/{appVersion}";
 #else
-            if (Application.platform == RuntimePlatform.Android)
-            {
-                return $"{hostServerIP}/CDN/Android/{appVersion}";
-            }
-            else if (Application.platform == RuntimePlatform.IPhonePlayer)
-            {
-                return $"{hostServerIP}/CDN/IPhone/{appVersion}";
-            }
-            else if (Application.platform == RuntimePlatform.WebGLPlayer)
-            {
-                return $"{hostServerIP}/CDN/WebGL/{appVersion}";
-            }
-
-            return $"{hostServerIP}/CDN/PC/{appVersion}";
+		        switch (Application.platform)
+                {
+                    case RuntimePlatform.Android:
+                        return $"{hostServerIP}/CDN/Android/{appVersion}";
+                    case RuntimePlatform.IPhonePlayer:
+                        return $"{hostServerIP}/CDN/IPhone/{appVersion}";
+                    case RuntimePlatform.WebGLPlayer:
+                    {
+                        return $"{hostServerIP}/StreamingAssets/Bundles/{pacakgeName}";
+                    }
+                    default:
+                        return $"{hostServerIP}/CDN/PC/{appVersion}";
+                }
 #endif
         }
 

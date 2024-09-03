@@ -7,5 +7,6 @@ namespace ET
     public class YooConfig: ScriptableObject
     {
         public EPlayMode EPlayMode;
+        public string Url;
     }
 }
