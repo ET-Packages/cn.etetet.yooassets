@@ -36,9 +36,9 @@ namespace YooAsset.Editor
             _bundleListView.makeItem = MakeBundleListViewItem;
             _bundleListView.bindItem = BindBundleListViewItem;
 #if UNITY_2020_1_OR_NEWER
-            _bundleListView.onSelectionChange += BundleListView_onSelectionChange;
+            _bundleListView.selectionChanged += BundleListView_onSelectionChange;
 #else
-            _bundleListView.onSelectionChanged += BundleListView_onSelectionChange;
+            _bundleListView.selectionChanged += BundleListView_onSelectionChange;
 #endif
 
             // 使用列表

@@ -10,12 +10,9 @@ namespace YooAsset.Editor
     /// <summary>
     /// 分屏控件
     /// </summary>
-    public class SplitView : TwoPaneSplitView
+    [UxmlElement]
+    public partial class SplitView : TwoPaneSplitView
     {
-        public new class UxmlFactory : UxmlFactory<SplitView, TwoPaneSplitView.UxmlTraits>
-        {
-        }
-
         /// <summary>
         /// 窗口分屏适配
         /// </summary>
