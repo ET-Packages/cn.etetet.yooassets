@@ -140,7 +140,7 @@ namespace YooAsset.Editor
         public List<CollectAssetInfo> GetAllCollectAssets(CollectCommand command, AssetBundleCollectorGroup group)
         {
             // 注意：模拟构建模式下只收集主资源
-            if (command.BuildMode == EBuildMode.SimulateBuild)
+            if (command.SimulateBuild)
             {
                 if (CollectorType != ECollectorType.MainAssetCollector)
                     return new List<CollectAssetInfo>();
@@ -149,7 +149,7 @@ namespace YooAsset.Editor
             Dictionary<string, CollectAssetInfo> result = new Dictionary<string, CollectAssetInfo>(1000);
 
             // 收集打包资源路径
-            List<string> findAssets =new List<string>();
+            List<string> findAssets = new List<string>();
             if (AssetDatabase.IsValidFolder(CollectPath))
             {
                 string collectDirectory = CollectPath;
@@ -166,7 +166,7 @@ namespace YooAsset.Editor
             foreach (string assetPath in findAssets)
             {
                 var assetInfo = new AssetInfo(assetPath);
-                if (IsValidateAsset(command, assetInfo) && IsCollectAsset(group, assetInfo))
+                if (command.IgnoreRule.IsIgnore(assetInfo) == false && IsCollectAsset(group, assetInfo))
                 {
                     if (result.ContainsKey(assetPath) == false)
                     {
@@ -218,47 +218,10 @@ namespace YooAsset.Editor
             string bundleName = GetBundleName(command, group, assetInfo);
             List<string> assetTags = GetAssetTags(group);
             CollectAssetInfo collectAssetInfo = new CollectAssetInfo(CollectorType, bundleName, address, assetInfo, assetTags);
-
-            // 注意：模拟构建模式下不需要收集依赖资源
-            if (command.BuildMode == EBuildMode.SimulateBuild)
-                collectAssetInfo.DependAssets = new List<AssetInfo>();
-            else
-                collectAssetInfo.DependAssets = GetAllDependencies(command, assetInfo.AssetPath);
-
+            collectAssetInfo.DependAssets = GetAllDependencies(command, assetInfo.AssetPath);
             return collectAssetInfo;
         }
 
-        private bool IsValidateAsset(CollectCommand command, AssetInfo assetInfo)
-        {
-            if (assetInfo.AssetPath.StartsWith("Assets/") == false && assetInfo.AssetPath.StartsWith("Packages/") == false)
-            {
-                UnityEngine.Debug.LogError($"Invalid asset path : {assetInfo.AssetPath}");
-                return false;
-            }
-
-            // 忽略文件夹
-            if (AssetDatabase.IsValidFolder(assetInfo.AssetPath))
-                return false;
-
-            // 忽略编辑器下的类型资源
-            if (assetInfo.AssetType == typeof(LightingDataAsset))
-                return false;
-
-            // 忽略Unity引擎无法识别的文件
-            if (command.IgnoreDefaultType)
-            {
-                if (assetInfo.AssetType == typeof(UnityEditor.DefaultAsset))
-                {
-                    UnityEngine.Debug.LogWarning($"Cannot pack default asset : {assetInfo.AssetPath}");
-                    return false;
-                }
-            }
-
-            if (DefaultFilterRule.IsIgnoreFile(assetInfo.FileExtension))
-                return false;
-
-            return true;
-        }
         private bool IsCollectAsset(AssetBundleCollectorGroup group, AssetInfo assetInfo)
         {
             // 根据规则设置过滤资源文件
@@ -303,7 +266,11 @@ namespace YooAsset.Editor
         }
         private List<AssetInfo> GetAllDependencies(CollectCommand command, string mainAssetPath)
         {
-            string[] depends = AssetDatabase.GetDependencies(mainAssetPath, true);
+            // 注意：模拟构建模式下不需要收集依赖资源
+            if (command.SimulateBuild)
+                return new List<AssetInfo>();
+
+            string[] depends = command.AssetDependency.GetDependencies(mainAssetPath, true);
             List<AssetInfo> result = new List<AssetInfo>(depends.Length);
             foreach (string assetPath in depends)
             {
@@ -312,7 +279,7 @@ namespace YooAsset.Editor
                     continue;
 
                 AssetInfo assetInfo = new AssetInfo(assetPath);
-                if (IsValidateAsset(command, assetInfo))
+                if (command.IgnoreRule.IsIgnore(assetInfo) == false)
                     result.Add(assetInfo);
             }
             return result;

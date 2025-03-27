@@ -39,7 +39,7 @@ namespace ET
 
         protected override void Destroy()
         {
-            YooAssets.Destroy();
+            YooAssets.OnApplicationQuit();
         }
 
         public async ETTask CreatePackageAsync(string packageName, bool isDefault = false)
@@ -56,40 +56,57 @@ namespace ET
             {
                 case EPlayMode.EditorSimulateMode:
                 {
-                    EditorSimulateModeParameters createParameters = new();
-                    createParameters.SimulateManifestFilePath = EditorSimulateModeHelper.SimulateBuild("ScriptableBuildPipeline", packageName);
-                    await package.InitializeAsync(createParameters).Task;
+                    PackageInvokeBuildResult buildResult = EditorSimulateModeHelper.SimulateBuild(packageName);    
+                    string packageRoot = buildResult.PackageRootDirectory;
+                    FileSystemParameters editorFileSystemParams = FileSystemParameters.CreateDefaultEditorFileSystemParameters(packageRoot);
+                    EditorSimulateModeParameters initParameters = new();
+                    initParameters.EditorFileSystemParameters = editorFileSystemParams;
+                    await package.InitializeAsync(initParameters).Task;
                     break;
                 }
                 case EPlayMode.OfflinePlayMode:
                 {
-                    OfflinePlayModeParameters createParameters = new();
-                    await package.InitializeAsync(createParameters).Task;
+                    FileSystemParameters buildinFileSystemParams = FileSystemParameters.CreateDefaultBuildinFileSystemParameters();
+                    OfflinePlayModeParameters initParameters = new();
+                    initParameters.BuildinFileSystemParameters = buildinFileSystemParams;
+                    await package.InitializeAsync(initParameters).Task;
                     break;
                 }
                 case EPlayMode.HostPlayMode:
                 {
                     string defaultHostServer = GetHostServerURL(yooConfig.Url, package.PackageName);
                     string fallbackHostServer = GetHostServerURL(yooConfig.Url, package.PackageName);
-                    HostPlayModeParameters createParameters = new();
-                    createParameters.BuildinQueryServices = new GameQueryServices();
-                    createParameters.RemoteServices = new RemoteServices(defaultHostServer, fallbackHostServer);
-                    await package.InitializeAsync(createParameters).Task;
+                    IRemoteServices remoteServices = new RemoteServices(defaultHostServer, fallbackHostServer);
+                    FileSystemParameters cacheFileSystemParams = FileSystemParameters.CreateDefaultCacheFileSystemParameters(remoteServices);
+                    FileSystemParameters buildinFileSystemParams = FileSystemParameters.CreateDefaultBuildinFileSystemParameters();
+                    HostPlayModeParameters initParameters = new();
+                    initParameters.BuildinFileSystemParameters = buildinFileSystemParams; 
+                    initParameters.CacheFileSystemParameters = cacheFileSystemParams;
+                    await package.InitializeAsync(initParameters).Task;
                     break;
                 }
                 case EPlayMode.WebPlayMode:
                 {
                     string defaultHostServer = GetHostServerURL(yooConfig.Url, package.PackageName);
                     string fallbackHostServer = GetHostServerURL(yooConfig.Url, package.PackageName);
-                    WebPlayModeParameters createParameters = new();
-                    createParameters.BuildinQueryServices = new WebGLGameQueryServices();
-                    createParameters.RemoteServices = new RemoteServices(defaultHostServer, fallbackHostServer);
-                    await package.InitializeAsync(createParameters).Task;
+                    IRemoteServices remoteServices = new RemoteServices(defaultHostServer, fallbackHostServer);
+                    FileSystemParameters webServerFileSystemParams = FileSystemParameters.CreateDefaultWebServerFileSystemParameters();
+                    FileSystemParameters webRemoteFileSystemParams = FileSystemParameters.CreateDefaultWebRemoteFileSystemParameters(remoteServices); //支持跨域下载
+    
+                    WebPlayModeParameters initParameters = new();
+                    initParameters.WebServerFileSystemParameters = webServerFileSystemParams;
+                    initParameters.WebRemoteFileSystemParameters = webRemoteFileSystemParams;
+
+                    await package.InitializeAsync(initParameters).Task;
                     break;
                 }
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+            
+            RequestPackageVersionOperation op = package.RequestPackageVersionAsync();
+            await op.Task;
+            await package.UpdatePackageManifestAsync(op.PackageVersion).Task;
         }
 
         string GetHostServerURL(string url, string pacakgeName)
@@ -133,7 +150,7 @@ namespace ET
         public void DestroyPackage(string packageName)
         {
             ResourcePackage package = YooAssets.GetPackage(packageName);
-            package.UnloadUnusedAssets();
+            package.DestroyPackage();
         }
 
         /// <summary>

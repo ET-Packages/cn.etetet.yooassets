@@ -8,8 +8,15 @@ namespace YooAsset.Editor
     {
         public BuildResult Run(BuildParameters buildParameters, bool enableLog)
         {
-            AssetBundleBuilder builder = new AssetBundleBuilder();
-            return builder.Run(buildParameters, GetDefaultBuildPipeline(), enableLog);
+            if (buildParameters is ScriptableBuildParameters)
+            {
+                AssetBundleBuilder builder = new AssetBundleBuilder();
+                return builder.Run(buildParameters, GetDefaultBuildPipeline(), enableLog);
+            }
+            else
+            {
+                throw new Exception($"Invalid build parameter type : {buildParameters.GetType().Name}");
+            }
         }
 
         /// <summary>
@@ -29,6 +36,7 @@ namespace YooAsset.Editor
                     new TaskCreateReport_SBP(),
                     new TaskCreatePackage_SBP(),
                     new TaskCopyBuildinFiles_SBP(),
+                    new TaskCreateCatalog_SBP()
                 };
             return pipeline;
         }

@@ -9,7 +9,7 @@ namespace YooAsset.Editor
     public static class AssetBundleBuilderHelper
     {
         /// <summary>
-        /// 获取默认的输出根路录
+        /// 获取默认的输出根目录
         /// </summary>
         public static string GetDefaultBuildOutputRoot()
         {
@@ -22,7 +22,7 @@ namespace YooAsset.Editor
         /// </summary>
         public static string GetStreamingAssetsRoot()
         {
-            return $"{Application.dataPath}/StreamingAssets/{YooAssetSettingsData.Setting.DefaultYooFolderName}/";
+            return YooAssetSettingsData.GetYooDefaultBuildinRoot();
         }
     }
 }

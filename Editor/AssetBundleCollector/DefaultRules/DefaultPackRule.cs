@@ -148,6 +148,34 @@ namespace YooAsset.Editor
     }
 
     /// <summary>
+    /// 打包视频文件
+    /// </summary>
+    [DisplayName("打包视频文件")]
+    public class PackVideoFile : IPackRule
+    {
+        PackRuleResult IPackRule.GetPackRuleResult(PackRuleData data)
+        {
+            string bundleName = data.AssetPath;
+            string fileExtension = Path.GetExtension(data.AssetPath);
+            fileExtension = fileExtension.Remove(0, 1);
+            PackRuleResult result = new PackRuleResult(bundleName, fileExtension);
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// 打包着色器
+    /// </summary>
+    [DisplayName("打包着色器文件")]
+    public class PackShader : IPackRule
+    {
+        public PackRuleResult GetPackRuleResult(PackRuleData data)
+        {
+            return DefaultPackRule.CreateShadersPackRuleResult();
+        }
+    }
+
+    /// <summary>
     /// 打包着色器变种集合
     /// </summary>
     [DisplayName("打包着色器变种集合文件")]
